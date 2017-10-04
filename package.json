@@ -1,0 +1,29 @@
+{
+  "name": "osm-p2p-sync",
+  "description": "CLI to sync osm-p2p databases together.",
+  "author": "Stephen Whitmore <sww@eight.net>",
+  "version": "0.0.0",
+  "repository": {
+    "url": "git://github.com/noffle/osm-p2p-sync.git"
+  },
+  "bin": {
+    "osm-p2p-sync": "bin/cmd.js"
+  },
+  "homepage": "https://github.com/noffle/osm-p2p-sync",
+  "bugs": "https://github.com/noffle/osm-p2p-sync/issues",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [
+    "osm",
+    "p2p",
+    "peer",
+    "cli",
+    "openstreetmap"
+  ],
+  "dependencies": {
+    "minimist": "^1.2.0",
+    "mkdirp": "^0.5.1",
+    "osm-p2p": "^2.0.0"
+  },
+  "license": "ISC"
+}
