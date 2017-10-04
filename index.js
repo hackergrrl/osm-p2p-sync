@@ -2,25 +2,59 @@ var fs = require('fs')
 var sneakernet = require('hyperlog-sneakernet-replicator')
 var mkdirp = require('mkdirp')
 var eos = require('end-of-stream')
+var Path = require('path')
 var OsmP2P = require('osm-p2p')
+var level = require('level')
+var hyperlog = require('hyperlog')
 
 module.exports = sync
 
 function sync (a, b, cb) {
-  makeReplicationStream(a, done.bind(null, 0))
-  makeReplicationStream(b, done.bind(null, 1))
+  getInfo(a, done.bind(null, 0))
+  getInfo(b, done.bind(null, 1))
 
-  var streams = []
+  var info = []
   var pending = 2
-  function done (idx, stream) {
-    streams[idx] = stream
+  function done (idx, err, details) {
+    console.log(idx, details)
+    info[idx] = details
     if (!--pending) {
-      pipe(streams[0], streams[1], cb)
+      doSync(info[0], info[1], cb)
     }
   }
 }
 
-function pipe (a, b, cb) {
+function doSync (a, b, cb) {
+  if (a.type === 'dir' && b.type === 'dir') {
+    return syncDirs(a.path, b.path, cb)
+  }
+  else if (a.type === 'dir' && b.type === 'file') {
+    return syncFileDir(b.path, a.path, cb)
+  }
+  else if (a.type === 'file' && b.type === 'dir') {
+    return syncFileDir(a.path, b.path, cb)
+  }
+  else if (a.type === 'file' && b.type === 'file') {
+    return syncFiles(a.path, b.path, cb)
+  }
+}
+
+function syncFiles (a, b) {
+  throw new Error('not implemented')
+}
+
+function syncFileDir (a, b, cb) {
+  var db = level(Path.join(b, 'log'))
+  var hlog = hyperlog(db, { valueEncoding: 'json' })
+  sneakernet(hlog, a, cb)
+}
+
+function syncDirs (a, b, cb) {
+  var A = OsmP2P(a)
+  var B = OsmP2P(b)
+  var r1 = A.log.replicate()
+  var r2 = B.log.replicate()
+
   eos(r1, done)
   eos(r2, done)
 
@@ -38,27 +72,19 @@ function pipe (a, b, cb) {
   }
 }
 
-function makeReplicationStream (p, cb) {
+function getInfo (p, cb) {
   fs.stat(p, function (err, stat) {
     if (!stat) {
-      console.log('no exist')
       if (p.endsWith('/')) {
-        // Make a new osm-p2p directory.
-        var osm = OsmP2P(p)
-        return cb(null, osm.log.replicate())
+        return cb(null, { path: p, type: 'dir', exists: false })
       } else {
-        // Make a new sync file.
-        // ...
+        return cb(null, { path: p, type: 'file', exists: false })
       }
     } else {
-      console.log('exists')
       if (stat.isDirectory()) {
-        // Existing dir.
-        var osm = OsmP2P(p)
-        return cb(null, osm.log.replicate())
+        return cb(null, { path: p, type: 'dir', exists: true })
       } else {
-        // Existing sync file.
-        // ...
+        return cb(null, { path: p, type: 'file', exists: true })
       }
     }
   })

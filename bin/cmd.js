@@ -16,7 +16,12 @@ if (args._.length !== 4) {
 var src = args._[2]
 var dst = args._[3]
 
-sync(src, dst)
+sync(src, dst, function (err) {
+  if (err) {
+    console.error(err)
+    process.exit(1)
+  }
+})
 
 function exit (code) {
   fs.createReadStream(path.join(__dirname, 'USAGE'))
