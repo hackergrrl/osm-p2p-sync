@@ -1,6 +1,5 @@
 var fs = require('fs')
 var sneakernet = require('hyperlog-sneakernet-replicator')
-var mkdirp = require('mkdirp')
 var eos = require('end-of-stream')
 var Path = require('path')
 var OsmP2P = require('osm-p2p')
@@ -28,14 +27,11 @@ function sync (a, b, cb) {
 function doSync (a, b, cb) {
   if (a.type === 'dir' && b.type === 'dir') {
     return syncDirs(a.path, b.path, cb)
-  }
-  else if (a.type === 'dir' && b.type === 'file') {
+  } else if (a.type === 'dir' && b.type === 'file') {
     return syncFileDir(b.path, a.path, cb)
-  }
-  else if (a.type === 'file' && b.type === 'dir') {
+  } else if (a.type === 'file' && b.type === 'dir') {
     return syncFileDir(a.path, b.path, cb)
-  }
-  else if (a.type === 'file' && b.type === 'file') {
+  } else if (a.type === 'file' && b.type === 'file') {
     return syncFiles(a.path, b.path, cb)
   }
 }
@@ -81,19 +77,19 @@ function syncDirs (a, b, cb) {
   var r1 = A.log.replicate()
   var r2 = B.log.replicate()
 
-  eos(r1, predone)
-  eos(r2, predone)
+  eos(r1, predone.bind(null, A))
+  eos(r2, predone.bind(null, B))
 
   r1.pipe(r2).pipe(r1)
 
-  function predone (err) {
+  function predone (osm, err) {
     if (err) {
       pending = Infinity
       return cb(err)
     }
     // wait for indexes to regenerate
     osm.ready(done)
-  })
+  }
 
   var pending = 2
   function done () {
@@ -105,6 +101,7 @@ function syncDirs (a, b, cb) {
 
 function getInfo (p, cb) {
   fs.stat(p, function (err, stat) {
+    if (err) return cb(err)
     if (!stat) {
       if (p.endsWith('/')) {
         return cb(null, { path: p, type: 'dir', exists: false })
