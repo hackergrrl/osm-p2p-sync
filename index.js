@@ -2,6 +2,7 @@ var fs = require('fs')
 var sneakernet = require('hyperlog-sneakernet-replicator')
 var mkdirp = require('mkdirp')
 var eos = require('end-of-stream')
+var OsmP2P = require('osm-p2p')
 
 module.exports = sync
 
@@ -43,7 +44,8 @@ function makeReplicationStream (p, cb) {
       console.log('no exist')
       if (p.endsWith('/')) {
         // Make a new osm-p2p directory.
-        // ...
+        var osm = OsmP2P(p)
+        return cb(null, osm.log.replicate())
       } else {
         // Make a new sync file.
         // ...
@@ -52,7 +54,8 @@ function makeReplicationStream (p, cb) {
       console.log('exists')
       if (stat.isDirectory()) {
         // Existing dir.
-        // ...
+        var osm = OsmP2P(p)
+        return cb(null, osm.log.replicate())
       } else {
         // Existing sync file.
         // ...
