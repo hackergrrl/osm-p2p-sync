@@ -21,6 +21,7 @@
     "openstreetmap"
   ],
   "dependencies": {
+    "end-of-stream": "^1.4.0",
     "hyperlog-sneakernet-replicator": "^1.1.5",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",

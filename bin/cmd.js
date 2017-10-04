@@ -2,7 +2,7 @@
 
 var fs = require('fs')
 var path = require('path')
-var args = require('minimist')()
+var args = require('minimist')(process.argv)
 var sync = require('../')
 
 if (args.h || args.help) {
