@@ -2,7 +2,7 @@
   "name": "osm-p2p-sync",
   "description": "CLI to sync osm-p2p databases together.",
   "author": "Stephen Whitmore <sww@eight.net>",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "url": "git://github.com/noffle/osm-p2p-sync.git"
   },
