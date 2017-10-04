@@ -64,7 +64,15 @@ function syncFiles (a, b, cb) {
 function syncFileDir (a, b, cb) {
   var db = level(Path.join(b, 'log'))
   var hlog = hyperlog(db, { valueEncoding: 'json' })
-  sneakernet(hlog, a, cb)
+  sneakernet(hlog, a, function (err) {
+    if (err) return cb(err)
+    // close old db and regenerate indexes
+    db.close(function (err) {
+      if (err) return cb(err)
+      var osm = OsmP2P(b)
+      osm.ready(cb)
+    })
+  })
 }
 
 function syncDirs (a, b, cb) {
@@ -73,17 +81,22 @@ function syncDirs (a, b, cb) {
   var r1 = A.log.replicate()
   var r2 = B.log.replicate()
 
-  eos(r1, done)
-  eos(r2, done)
+  eos(r1, predone)
+  eos(r2, predone)
 
   r1.pipe(r2).pipe(r1)
 
-  var pending = 2
-  function done (err) {
+  function predone (err) {
     if (err) {
       pending = Infinity
       return cb(err)
     }
+    // wait for indexes to regenerate
+    osm.ready(done)
+  })
+
+  var pending = 2
+  function done () {
     if (!--pending) {
       return cb()
     }
