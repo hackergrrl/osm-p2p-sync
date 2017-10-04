@@ -101,6 +101,7 @@ function syncDirs (a, b, cb) {
 
 function getInfo (p, cb) {
   fs.stat(p, function (err, stat) {
+    if (err && err.code === 'ENOENT') err = stat = null
     if (err) return cb(err)
     if (!stat) {
       if (p.endsWith('/')) {
