@@ -6,6 +6,7 @@ var Path = require('path')
 var OsmP2P = require('osm-p2p')
 var level = require('level')
 var hyperlog = require('hyperlog')
+var memdb = require('memdb')
 
 module.exports = sync
 
@@ -39,8 +40,25 @@ function doSync (a, b, cb) {
   }
 }
 
-function syncFiles (a, b) {
-  throw new Error('not implemented')
+function syncFiles (a, b, cb) {
+  // 1. sync 'a' to an empty in-memory hyperlog
+  var db = memdb()
+  var hlog = hyperlog(db, { valueEncoding: 'json' })
+  sneakernet(hlog, a, done1)
+
+  function done1 (err) {
+    if (err) return cb(err)
+
+    // 2. now that 'a' is loaded into a hyperlog, sync it to 'b'
+    sneakernet(hlog, b, done2)
+  }
+
+  function done2 (err) {
+    if (err) return cb(err)
+
+    // 3. now sync the in-mem hyperlog (which has a+b) back to 'a'
+    sneakernet(hlog, a, cb)
+  }
 }
 
 function syncFileDir (a, b, cb) {
